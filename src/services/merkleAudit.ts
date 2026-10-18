@@ -84,7 +84,15 @@ const activeMfaSessions = new Map<string, MfaSessionToken>();
 
 export async function createMfaSessionToken(action: string, durationSeconds = 120): Promise<MfaSessionToken> {
   const expiresAt = Date.now() + durationSeconds * 1000;
-  const raw = `mfa-auth:${action}:${expiresAt}:${Math.random().toString(36).slice(2)}`;
+  let randomPart: string;
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const array = new Uint8Array(16);
+    crypto.getRandomValues(array);
+    randomPart = Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+  } else {
+    throw new Error('Secure random number generator not available.');
+  }
+  const raw = `mfa-auth:${action}:${expiresAt}:${randomPart}`;
   const signature = await computeSha256(raw);
   const token: MfaSessionToken = {
     token: `mfa_tok_${signature.slice(0, 24)}`,

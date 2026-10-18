@@ -26,7 +26,10 @@ export const MfaModal: React.FC<MfaModalProps> = ({
 
   useEffect(() => {
     // Generate a fresh 6-digit rolling authenticator code every 30 seconds
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    const random = array[0] / (0xffffffff + 1);
+    const code = Math.floor(100000 + random * 900000).toString();
     setSimulatedTotp(`${code.slice(0, 3)} ${code.slice(3)}`);
   }, [isOpen]);
 
